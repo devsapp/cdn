@@ -25,6 +25,7 @@
     "build": "esbuild src/index.ts --bundle --log-level=error --minify --platform=node --format=cjs --target=node10.4 --external:@serverless-devs/core --outfile=dist/index.js"
   },
   "dependencies": {
+    "@alicloud/pop-core": "^1.7.12",
     "@serverless-devs/core": "latest"
   },
   "devDependencies": {

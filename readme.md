@@ -1,76 +1,53 @@
-# 插件开发说明
+## 概述
+支持对域名（OSS / FC）停用/启用加速域名，以及刷新节点的能力。
 
-<p align="center"><b> 中文 | <a href="./readme_en.md"> English </a>  </b></p>
+## 接口设计
+> 所有方法都需要前置校验 CDN 服务是否开通 [参考文档](https://help.aliyun.com/document_detail/91168.htm?spm=a2c4g.11186623.0.0.50225d7a0jcrIa#t65116.html)
 
-> Serverless Devs 组件开发需要严格遵守 [Serverless Package Model](../../spec/zh/0.0.2/serverless_package_model/readme.md) 中的 [组件模型规范](../../spec/zh/0.0.2/serverless_package_model/3.package_model.md#组件模型规范)。在[组件模型规范](../../spec/zh/0.0.2/serverless_package_model/3.package_model.md#组件模型规范)中有关于[组件模型元数据](../../spec/zh/0.0.2/serverless_package_model/3.package_model.md#组件模型元数据)和[组件模型代码规范](../../spec/zh/0.0.2/serverless_package_model/3.package_model.md#组件模型代码规范)的说明。
-
-> 🐵 温馨提示，在进行 Serverless Devs 的组件开发时，可能会遇到很多相对来说更为通用的能力，包括不限于：
-> - 获取用户的密钥信息
-> - 进行更规范的格式化输出
-> - 对用户的输入参数进行解析   
-> ......   
-> 这些内容都可以通过 Serverless Devs 所提供的 [Core包](https://github.com/Serverless-Devs/core) 进行提供，更多 [Core包](https://github.com/Serverless-Devs/core) 信息，可以参考 [Core包的开发文档](https://github.com/Serverless-Devs/core)
-
-Serverless Devs的组件开发案例已经被集成到Serverless Devs命令行工具中，通过对Serverless Devs的命令行工具，可以进行空白组件项目的初始化，开发者只需要执行`s init`即可看到：
-
-```shell script
-
-🚀 Serverless Awesome: https://github.com/Serverless-Devs/package-awesome
-
-? Hello Serverless for Cloud Vendors (Use arrow keys or type to search)
-❯ Alibaba Cloud Serverless 
-  AWS Cloud Serverless 
-  Tencent Cloud Serverless 
-  Baidu Cloud Serverless 
-  Dev Template for Serverless Devs 
+### deploy
+修改或者添加加速域名的配置，参考文档 [Add](https://help.aliyun.com/document_detail/91176.htm?spm=a2c4g.11186623.0.0.280d5d7angr9C6#t65090.html)、[Update](https://help.aliyun.com/document_detail/91195.htm?spm=a2c4g.11186623.0.0.280d5d7angr9C6#t65096.html)、[Get](https://help.aliyun.com/document_detail/91187.htm?spm=a2c4g.11186623.0.0.280d5d7angr9C6#doc-api-Cdn-DescribeCdnDomainDetail)
+```yaml
+props:
+  # 必填
+  cdnType: Enum # 加速域名的业务类型: web / download / video
+  domainName: String # 需要接入CDN的加速域名。
+  sources:
+    - type: Enum # 源站类型。ipaddr：IP源站。domain：域名源站。oss：OSS Bucket为源站。fc_domain：函数计算源站。
+      content: String # 回源地址，可以是IP或域名。
+      port: Number # 端口 默认80
+      priority: Enum # 源站地址对应的优先级，支持20和30，默认值为20。20是主源，30是备源。
+      weight: Number # 回源权重，100以内，默认值为10。
+  # 选填
+  checkUrl: String # 健康检测URL
+  scope: Enum # 加速区域。domestic（默认值）：仅中国内地。overseas：全球（不包含中国内地）。global：全球。 PS: 据我了解除了 overseas 都需要实名认证 + 备案
+  topLevelDomain: String # 顶级接入域。（只有白名单用户设置才生效，不支持同时传入Sources和TopLevelDomain参数，如果您同时传入Sources和TopLevelDomain参数，TopLevelDomain将不生效。）
 ```
+> 真实的请求体：
+> {"scope":"domestic","cdnType":"web","domainName":"test.shoushuai.top","sources":[{"Type":"fc_domain","Content":"poem.shoushuai.top","Priority":"20","Port":80,"Weight":"10"},{"Type":"oss","Content":"fcli-test.oss-cn-shenzhen.aliyuncs.com","Priority":"20","Port":80,"Weight":"10"}]}
 
-此时，选择最后的`Dev Template for Serverless Devs`，并按回车：
+> TODO: 和 HTTPS 证书证书关联
 
-```shell script
-$ s init
+支持参数
+支持的参数--verify-type   [选填] 校验方式，取值：**dnsCheck**：DNS验证。**fileCheck**：文件验证。
+注：
 
-🚀 Serverless Awesome: https://github.com/Serverless-Devs/package-awesome
+1. 验证域名归属：如果指定了 verify-type，那么仅验证这一种方式就好了；如果没有指定，那么两种方式都需要验证。
+1. 如果域名验证不通过：根据 verify-type 引导用户添加验证，如果没有指定 verify-type**，**推荐 DNS 验证。
+#### 流程图
+![](https://intranetproxy.alipay.com/skylark/lark/0/2022/jpeg/145998/1655719660549-e4169856-2b94-4f7f-beae-d84cb30ea510.jpeg)
 
-? Hello Serverless for Cloud Vendors Dev Template for Serverless Devs
-? Please select an Serverless-Devs Application (Use arrow keys or type to search)
-❯ Application Scaffolding 
-  Component Scaffolding 
-```
+文档链接： [是否开通 CDN](https://help.aliyun.com/document_detail/91168.htm?spm=a2c4g.11186623.0.0.50225d7a0jcrIa#t65116.html)、[验证域名归属](https://help.aliyun.com/document_detail/169377.html#section-cdf-gbs-rlf)
 
-此时，选择`Component Scaffolding`，并按回车，即可完成一个完整的Serverless Devs的Component项目的初始化，可以通过命令查看文件树：
+### start
+启用配置的域名并且状态为停用的加速域名，将DomainStatus变更为Online。[参考文档](https://help.aliyun.com/document_detail/91191.htm?spm=a2c4g.11186623.0.0.280d5d7a8k8t4E#t65093.html)
+### stop
+停用配置的加速域名，将DomainStatus变更为Offline。[参考文档](https://help.aliyun.com/document_detail/91194.htm?spm=a2c4g.11186623.0.0.280d5d7a8k8t4E#t65092.html)
+### refresh
+该方法会刷新节点上的文件内容。被刷新的文件缓存将立即失效，新的请求将回源获取最新的文件，支持URL批量刷新。[参考文档](https://help.aliyun.com/document_detail/91164.htm#t156976.html)
 
-```shell script
-$ find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'
-.
-|____LICENSE
-|____.signore
-|____example
-| |____s.yaml
-|____readme.md
-|____publish.yaml
-|____.gitignore
-|____package.json
-|____tsconfig.json
-|____src
-| |____common
-| | |____entity.ts
-| | |____logger.ts
-| |____index.ts
-```
+接受参数
+--object-path  [必填] 刷新URL，格式为**加速域名**或**刷新的文件或目录, **多个URL之间使用换行符（\n）分隔。
+--object-type  [选填] 刷新的类型：**File**（默认值）、**Directory、Regex**
 
-这其中：
-
-| 目录 | 含义 |
-| --- | --- | 
-| LICENSE | 项目默认的LICENSE，默认的LICENSE是遵循MIT开源协议的（推荐） | 
-| .signore | 项目发布时，可以选择的忽略文件，类似于npm发布是的`.npmignore`文件 | 
-| example | 该组件对应的测试应用 | 
-| publish.yaml | 项目所必须的文件，Serverless Devs Package的开发识别文档 |
-| .gitignore| 推送到Github的忽略文件 | 
-| package.json| Node.js的package.json，需要描述清楚组件的入口文件位置 |
-| tsconfig.json| Typescript的tsconfig.json，用来对TS项目进行描述等 |
-| src| 用户的代码目录 |
-| readme.md| 版本的描述，例如当前版本的更新内容等 |
-
-此时，开发者可以在src下完成业务代码的开发，由于默认的初始化项目是Typescript，所以开发完成业务代码还需要编译成Javascript（可以通过`npm run build`进行编译），在完成项目编译之后，还需要对项目进行`publish.yaml`文件的编写。完成之后，即可将项目发不到不同的源，以Github Registry为例，可以在Github创建一个`Public`的仓库，并将编译后的代码放到仓库，并发布一个版本。此时，就可以通过客户端获取到该应用。
+### api 【待定】
+将 SDK 抛出，参考 [fc api](https://github.com/devsapp/fc-api-component) 组件

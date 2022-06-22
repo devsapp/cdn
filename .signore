@@ -17,7 +17,7 @@ package-lock.json
 .env
 
 README.md
-./examples
+./example
 ./test
 ./Makefile
 ./f2elint.config.js
