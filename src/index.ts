@@ -18,7 +18,7 @@ export default class ComponentDemo {
    * @param inputs 
    */
   async start(inputs: InputProps) {
-    console.log(JSON.stringify(inputs, null, 2));
+    logger.log(JSON.stringify(inputs, null, 2));
   }
 
   /**
@@ -26,7 +26,7 @@ export default class ComponentDemo {
    * @param inputs 
    */
   async stop(inputs: InputProps) {
-    console.log(JSON.stringify(inputs, null, 2));
+    logger.log(JSON.stringify(inputs, null, 2));
   }
 
   /**
@@ -34,7 +34,15 @@ export default class ComponentDemo {
    * @param inputs 
    */
   async refresh(inputs: InputProps) {
-    console.log(JSON.stringify(inputs, null, 2));
+    logger.log(JSON.stringify(inputs, null, 2));
+  }
+
+  /**
+   * 删除节点上的文件内容
+   * @param inputs 
+   */
+   async remove(inputs: InputProps) {
+    logger.log(JSON.stringify(inputs, null, 2));
   }
 
   /**
@@ -42,6 +50,6 @@ export default class ComponentDemo {
    * @param inputs 
    */
   async api(inputs: InputProps) {
-    console.log(JSON.stringify(inputs, null, 2));
+    logger.log(JSON.stringify(inputs, null, 2));
   }
 }
