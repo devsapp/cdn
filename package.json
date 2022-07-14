@@ -20,7 +20,6 @@
   ],
   "scripts": {
     "start": "npm run watch",
-    "remove": "cd example && s deploy",
     "watch": "tsc -w",
     "prebuild": "rimraf package-lock.json && rimraf dist && rimraf node_modules && npm i",
     "build": "esbuild src/index.ts --bundle --log-level=error --minify --platform=node --format=cjs --target=node10.4 --external:@serverless-devs/core --outfile=dist/index.js"
