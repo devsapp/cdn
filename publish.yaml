@@ -1,13 +1,13 @@
 Type: Component
 Name: cdn
 Provider:
-  - aliyun 
+  - aliyun
 Version: 0.0.1
 Description: CDN 操作
 HomePage: https://github.com/devsapp/cdn
 Tags: #标签详情
   - CDN
-Category: 分类
+Category: 基础云服务
 Service:
   服务名:
     Authorities: #权限描述
@@ -16,8 +16,159 @@ Commands: # 指令，格式为指令：指令描述，例如：
   deploy: 部署函数
   invoke: 调用函数
 Properties:
-  Region: # 参数
-    Description: 参数描述
-    Required: true # 参数必选，true/false
-    Type: # 参数类型
-      - String
+  required:
+    - cdnType
+    - domainName
+    - source
+  cdnType:
+    title: 加速域名的业务类型
+    enum:
+      - web # 图片小文件
+      - download # 大文件下载
+      - video # 视音频点播
+    x-enum-label:
+      - 图片小文件
+      - 大文件下载
+      - 视音频点播
+    default: web
+  domainName:
+    title: 加速域名
+    description: 需要接入CDN的加速域名。支持泛域名,以英文句号(.)开头，例如.example.com。
+    type: string
+    examples:
+      - .example.com
+  sources:
+    type: array
+    title: 回源地址列表
+    default: []
+    examples: [],
+    minItems: 1
+    uniqueItems: true
+    items:
+      oneOf:
+        - type: object
+          title: 回源地址
+          required:
+            - type
+            - content
+          properties:
+            type:
+              title: 源站类型
+              enum:
+                - ipaddr # IP源站
+                - domain # 域名源站
+                - oss # OSS Bucket为源站
+                - fc_domain # 函数计算为源站
+              x-enum-label:
+                - IP源站
+                - 域名源站
+                - OSS Bucket为源站
+                - 函数计算为源站
+            content:
+              title: 回源地址
+              description: 可以是IP或域名。
+              type: string
+            port:
+              title: 端口
+              description: 可以指定443或80端口，也可以自定义端口，默认值为80端口。443端口支持HTTPS协议回源。
+            priority:
+              title: 优先级
+              description: 源站地址对应的优先级。支持20和30，默认值为20。20是主源，30是备源。
+              enum:
+                - 20
+                - 30
+              x-enum-label:
+                - 主源
+                - 备源
+              default: 20
+            weight:
+              title: 回源权重
+              description: 回源权重，取值范围为100以内，默认值为10。
+              type: integer
+              default: 10
+              maximum: 100
+  checkUrl:
+    type: string
+    title: 健康检测URL
+    examples:
+      - www.example.com/test.html
+  scope:
+    title: 加速区域
+    enum:
+      - domestic
+      - overseas
+      - global
+    x-enum-label:
+      - 仅中国内地
+      - 全球（不包含中国内地）
+      - 全球
+    default: domestic
+  topLevelDomain:
+    type: string
+    title: 顶级接入域
+    examples:
+      - example.com
+  refreshConfig:
+    type: object
+    title: 刷新节点的文件内容配置
+    required:
+      - objectPaths
+    properties:
+      objectPaths:
+        type: array
+        title: 刷新URL
+        default: [ ]
+        examples: [ ],
+        uniqueItems: true
+        items:
+          oneOf:
+            - type: string
+              description: objectType时必须以http://或https://开头，不能重复。
+              文件刷新和目录刷新的功能说明请参考<a href='https://help.aliyun.com/document_detail/27140.html?spm=api-workbench.API%20Explorer.0.0.48731e0fH4DOa6'>刷新和预热资源</a>，正则刷新的功能说明和操作示例请参考<a href='https://help.aliyun.com/document_detail/146195.html?spm=api-workbench.API%20Explorer.0.0.48731e0fH4DOa6'>正则刷新说明</a>。
+        objectType:
+          default: File
+          title: 刷新的类型
+          enum:
+            - File
+            - Directory
+            - Regex
+          x-enum-label:
+            - 文件刷新
+            - 目录刷新
+            - 正则刷新
+  pushObjectCacheConfig:
+    type: object
+    title: 预热源站内容配置
+    required:
+      - objectPaths
+    properties:
+      objectPaths:
+        type: array
+        title: 预热URL
+        default: [ ]
+        examples: [ ],
+        uniqueItems: true
+        items:
+          oneOf:
+            - type: string
+              description: objectType时必须以http://或https://开头，不能重复。
+              pattern: '^((https|http)?:\/\/)[^\s]+'
+      area:
+        title: 预热URL
+        description: 如果不传该参数，默认的预热区域为您的域名所配置的CDN加速区域。
+        enum:
+          - domestic
+          - overseas
+        x-enum-label:
+          - 仅中国内地
+          - 全球（不包含中国内地）
+      L2Preload:
+        title: 是否直接预热到L2节点
+        type: boolean
+        description: true：代表预热的节点层级必须包含L2节点。false：代表仅预热回源层节点（false为默认值，回源层节点可能是L2节点，也可能是L3节点）。
+
+
+
+
+
+
