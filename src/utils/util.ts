@@ -2,7 +2,7 @@ import {promises} from "dns"
 import logger from "../common/logger"
 import {InputProps} from "../common/entity";
 import * as core from "@serverless-devs/core";
-import {CatchableError} from "@serverless-devs/core";
+import {CatchableError, getCredential} from "@serverless-devs/core";
 import os from "os";
 import path from "path";
 import fs from "fs";
@@ -50,21 +50,28 @@ export async function hasAddCname(cname: string, domainName: string): Promise<bo
  * 所有操作的前置处理
  * @param inputs
  */
-export async function handlerPreMethod(inputs: InputProps<any>, requiredRefreshConfig?: boolean, requiredPushObjectCacheConfig?: boolean) {
+export async function handlerPreMethod(inputs: InputProps<CDNConfig>, { requiredRefreshConfig, requiredPushObjectCacheConfig }: { requiredRefreshConfig?: boolean; requiredPushObjectCacheConfig?: boolean } = {}) {
 
     // 判断是否是 help，如果是则退出不处理
     if (isHelp(inputs.args, inputs.argsObj)) {
         return inputs;
     }
+    await initCredentials(inputs);
     // 校验props
-    validateProps(inputs, requiredRefreshConfig, requiredPushObjectCacheConfig);
+    validateProps(inputs, {requiredRefreshConfig, requiredPushObjectCacheConfig});
 
     await updateCore(); // 更新到最新版本的 core
 
     return inputs;
 }
 
-export function validateProps(inputs: InputProps<CDNConfig>, requiredRefreshConfig?: boolean, requiredPushObjectCacheConfig?: boolean) {
+export async function initCredentials(inputs: InputProps<CDNConfig>) {
+    if (!inputs.credentials) {
+        inputs.credentials = await getCredential(inputs.project.access);
+    }
+}
+
+export function validateProps(inputs: InputProps<CDNConfig>, { requiredRefreshConfig, requiredPushObjectCacheConfig }: { requiredRefreshConfig?: boolean; requiredPushObjectCacheConfig?: boolean } = {}) {
     const errMsgs = []
     // 校验密钥别名是否填写
     if (!inputs.credentials) {

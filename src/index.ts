@@ -3,7 +3,7 @@ import {InputProps} from './common/entity';
 import {CDNConfig} from './lib/interface/cdn/CDNConfig';
 import {CDNClient} from './utils/client';
 import {handlerPreMethod, hasAddCname} from './utils/util';
-import {inquirer} from "@serverless-devs/core";
+import {CatchableError, inquirer} from "@serverless-devs/core";
 
 export default class CdnComponent{
 
@@ -17,18 +17,16 @@ export default class CdnComponent{
 
     const client = await CDNClient.getInstant(inputs.credentials)
     const config = inputs.props
-    let cdnDomain = null
     const domainName = config.domainName;
-    if (cdnDomain = await client.getCdnDomain(domainName)) {
+
+    let cdnDomain = await client.getCdnDomain(domainName)
+    if (cdnDomain) {
       await client.updateCdnDomain(config)
     } else {
       // 校验域名归属
       if (!await client.domainHasVerify(domainName)) {
         const domainVerifyContent = await client.getDomainVerifyContent(domainName);
-        logger.warn('Owner verification of the root domain failed.')
-        logger.warn('Pleas go to the DNS service provider to configure the TXT record')
-        logger.warn(`Host: [verification] Record Type: [TXT] RecordValue: [${domainVerifyContent}]`)
-        process.exit(1)
+        throw new CatchableError('Owner verification of the root domain failed.', `Pleas go to the DNS service provider to configure the TXT record\nHost: [verification] Record Type: [TXT] RecordValue: [${domainVerifyContent}]`)
       }
       await client.addCdnDomain(config)
       cdnDomain = await client.getCdnDomain(domainName)
@@ -94,7 +92,9 @@ export default class CdnComponent{
    * @param inputs
    */
   async refresh(inputs: InputProps<CDNConfig>) {
-    await handlerPreMethod(inputs, true);
+    await handlerPreMethod(inputs, {
+      requiredRefreshConfig: true
+    });
     const instant = await CDNClient.getInstant(inputs.credentials);
     await instant.refreshObjectCaches(inputs.props.refreshConfig);
   }
@@ -104,7 +104,9 @@ export default class CdnComponent{
    * @param inputs
    */
   async warmUp(inputs: InputProps<CDNConfig>) {
-    await handlerPreMethod(inputs, false, true);
+    await handlerPreMethod(inputs, {
+      requiredPushObjectCacheConfig: true
+    });
     const instant = await CDNClient.getInstant(inputs.credentials);
     await instant.pushObjectCache(inputs.props.pushObjectCacheConfig);
   }
@@ -113,7 +115,7 @@ export default class CdnComponent{
    * 删除加速域名
    * @param inputs
    */
-   async remove(inputs: InputProps<CDNConfig>) {
+  async remove(inputs: InputProps<CDNConfig>) {
     await handlerPreMethod(inputs);
 
     const instant = await CDNClient.getInstant(inputs.credentials);

@@ -40,7 +40,7 @@ export class CDNClient {
             if (helpOpenCdnService) {
                 await this.instant.openCdnService()
             } else {
-                process.exit(1)
+                throw new CatchableError('')
             }
         }
 
