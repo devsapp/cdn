@@ -12,6 +12,7 @@ import logger from '../common/logger';
 import {CatchableError, inquirer} from '@serverless-devs/core';
 import {RefreshConfig} from "../lib/interface/cdn/RefreshConfig";
 import {PushObjectCacheConfig} from "../lib/interface/cdn/PushObjectCacheConfig";
+import {SPINNER_VM} from "./util";
 
 export class CDNClient {
 
@@ -20,6 +21,8 @@ export class CDNClient {
     private client: Cdn20180510
 
     public static async getInstant(credentials: ICredentials): Promise<CDNClient> {
+
+        SPINNER_VM.info('create the instance of CdnClient')
         if (!CDNClient.instant) {
             CDNClient.instant = new CDNClient
             CDNClient.instant.client = new Cdn20180510(new $OpenApi.Config({
@@ -28,7 +31,6 @@ export class CDNClient {
                 endpoint: 'cdn.aliyuncs.com'
             }))
         }
-
         if (!await CDNClient.instant.checkHasOpen()) {
             const { helpOpenCdnService } = await inquirer.prompt([
                 {
@@ -40,7 +42,7 @@ export class CDNClient {
             if (helpOpenCdnService) {
                 await this.instant.openCdnService()
             } else {
-                throw new CatchableError('')
+                throw new CatchableError('the cdnService is not open, could not do any option')
             }
         }
 
@@ -51,6 +53,7 @@ export class CDNClient {
      * 检测是否已开通
      */
     private async checkHasOpen(): Promise<boolean> {
+        SPINNER_VM.info('check the CdnService is open')
         let openCdnServiceRequest = new $Cdn20180510.OpenCdnServiceRequest({});
         try {
             const res: DescribeCdnServiceResponse = await this.client.describeCdnService(openCdnServiceRequest);
@@ -69,6 +72,7 @@ export class CDNClient {
     }
 
     private async openCdnService() {
+        SPINNER_VM.info('do open the CdnService')
         await this.client.openCdnService(new OpenCdnServiceRequest({ internetChargeType: 'PayByTraffic'}));
     }
 
@@ -94,6 +98,7 @@ export class CDNClient {
     }
 
     public async domainHasVerify(domainName: string): Promise<boolean> {
+        SPINNER_VM.info('check the domain has been verified')
         let request = new $Cdn20180510.VerifyDomainOwnerRequest({
             domainName,
             verifyType: "dnsCheck",
@@ -122,6 +127,7 @@ export class CDNClient {
     }
 
     public async addCdnDomain(cdnConfig: CDNConfig) {
+        SPINNER_VM.info('do add cdnDomain')
         let request = new $Cdn.AddCdnDomainRequest(cdnConfig);
 
         request.sources = JSON.stringify(cdnConfig.sources)
@@ -130,6 +136,7 @@ export class CDNClient {
     }
 
     public async updateCdnDomain(cdnConfig: CDNConfig) {
+        SPINNER_VM.info('do update cdnDomain')
         let request = new $Cdn20180510.ModifyCdnDomainRequest(cdnConfig);
         request.sources = JSON.stringify(cdnConfig.sources)
         await this.client.modifyCdnDomain(request);
@@ -137,6 +144,7 @@ export class CDNClient {
         // 修改加速区域
         const scope = cdnConfig.scope;
         if (scope) {
+            SPINNER_VM.info('do update cdnDomain scope')
             let modifySchdmRequest = new $Cdn20180510.ModifyCdnDomainSchdmByPropertyRequest({
                 domainName: cdnConfig.domainName,
                 property: `{\\"coverage\\":\\"${scope}\\"}`
@@ -146,6 +154,7 @@ export class CDNClient {
     }
 
     public async startCdnDomain(domainName: string): Promise<boolean> {
+        SPINNER_VM.info('start cdnDomain')
         let request = new $Cdn20180510.StartCdnDomainRequest({domainName})
         try {
             await this.client.startCdnDomain(request)
@@ -159,6 +168,7 @@ export class CDNClient {
     }
 
     public async stopCdnDomain(domainName: string) {
+        SPINNER_VM.info('stop cdnDomain')
         if (!this.hasCdnDomain) {
             throw new CatchableError(`The domain: [${domainName}] not found!`)
         }
@@ -167,6 +177,7 @@ export class CDNClient {
     }
 
     public async deleteCdnDomain(domainName: string) {
+        SPINNER_VM.info('check the cdnDomain if exists')
         let cndDomain = await this.getCdnDomain(domainName)
         if (!cndDomain) {
             logger.error(`加速域名: ${domainName}不存在`)
@@ -174,10 +185,12 @@ export class CDNClient {
         }
 
         let request = new $Cdn20180510.DeleteCdnDomainRequest({domainName});
+        SPINNER_VM.info('do delete cdnDomain')
         this.client.deleteCdnDomain(request)
     }
 
     public async refreshObjectCaches(refreshConfig: RefreshConfig) {
+        SPINNER_VM.info('do refresh object caches')
         await this.client.refreshObjectCaches(new RefreshObjectCachesRequest({
             objectPath: refreshConfig.objectPaths.join('\n'),
             objectType: refreshConfig.objectType
@@ -185,6 +198,7 @@ export class CDNClient {
     }
 
     public async pushObjectCache(pushObjectCacheConfig: PushObjectCacheConfig) {
+        SPINNER_VM.info('do push object caches')
         await this.client.pushObjectCache(new PushObjectCacheRequest({
             objectPath: pushObjectCacheConfig.objectPaths.join('\n'),
             area: pushObjectCacheConfig.area,

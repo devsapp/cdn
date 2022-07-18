@@ -2,7 +2,7 @@ import {promises} from "dns"
 import logger from "../common/logger"
 import {InputProps} from "../common/entity";
 import * as core from "@serverless-devs/core";
-import {CatchableError, getCredential} from "@serverless-devs/core";
+import {CatchableError, getCredential, spinner} from "@serverless-devs/core";
 import os from "os";
 import path from "path";
 import fs from "fs";
@@ -10,6 +10,7 @@ import {CDNConfig} from "../lib/interface/cdn/CDNConfig";
 import {SourceConfig} from "../lib/interface/cdn/SourceConfig";
 import {RefreshConfig} from "../lib/interface/cdn/RefreshConfig";
 import {PushObjectCacheConfig} from "../lib/interface/cdn/PushObjectCacheConfig";
+import {Ora} from "ora";
 
 const {lodash: _} = core;
 const MINIMIST_HELP_OPT = {
@@ -24,7 +25,8 @@ const SOURCE_WEIGHT_MAX_VAL = 100
 const SCOPES = ['domestic', 'overseas', 'global']
 const REFRESH_CONFIG_OBJECT_TYPES = ['File', 'Directory', 'Regex']
 const PUSH_OBJECT_CACHE_CONFIG_AREAS = ['domestic', 'overseas']
-
+let SPINNER_VM : Ora = null
+export {SPINNER_VM}
 
 export async function hasAddCname(cname: string, domainName: string): Promise<boolean> {
     let cnames = []
@@ -56,6 +58,9 @@ export async function handlerPreMethod(inputs: InputProps<CDNConfig>, { required
     if (isHelp(inputs.args, inputs.argsObj)) {
         return inputs;
     }
+
+    SPINNER_VM = spinner('start action')
+
     await initCredentials(inputs);
     // 校验props
     validateProps(inputs, {requiredRefreshConfig, requiredPushObjectCacheConfig});
@@ -66,14 +71,18 @@ export async function handlerPreMethod(inputs: InputProps<CDNConfig>, { required
 }
 
 export async function initCredentials(inputs: InputProps<CDNConfig>) {
+    SPINNER_VM.info('init credentials')
     if (!inputs.credentials) {
         inputs.credentials = await getCredential(inputs.project.access);
     }
 }
 
 export function validateProps(inputs: InputProps<CDNConfig>, { requiredRefreshConfig, requiredPushObjectCacheConfig }: { requiredRefreshConfig?: boolean; requiredPushObjectCacheConfig?: boolean } = {}) {
+    SPINNER_VM.start('start to verify the validity of props');
     const errMsgs = []
+
     // 校验密钥别名是否填写
+    SPINNER_VM.info('verify the validity of credentials')
     if (!inputs.credentials) {
         errMsgs.push('Please fill in the correct access!')
     }
@@ -123,9 +132,11 @@ export function validateProps(inputs: InputProps<CDNConfig>, { requiredRefreshCo
     if (errMsgs.length > 0) {
         throw new CatchableError(errMsgs.join("\n"))
     }
+    SPINNER_VM.stop();
 }
 
 export function refreshConfigValidate(refreshConfig: RefreshConfig, domainName: string): Array<string> {
+    SPINNER_VM.info('verify the validity of refreshConfig')
     const objectPaths = refreshConfig.objectPaths;
     const errMsgs = []
 
@@ -166,6 +177,7 @@ export function refreshConfigValidate(refreshConfig: RefreshConfig, domainName: 
 }
 
 export function pushObjectCacheConfigValidate(pushObjectCacheConfig: PushObjectCacheConfig, domainName: string): Array<string> {
+    SPINNER_VM.info('verify the validity of pushObjectCacheConfig')
     const objectPaths = pushObjectCacheConfig.objectPaths;
     const errMsgs = []
 
@@ -202,6 +214,8 @@ export function pushObjectCacheConfigValidate(pushObjectCacheConfig: PushObjectC
 }
 
 export function sourcesValidate(sources: Array<SourceConfig>): Array<string> {
+    SPINNER_VM.info('verify the validity of sources')
+
     const errmsgs = []
     if (!_.isEmpty(sources)) {
         errmsgs.push('sources is required!')
