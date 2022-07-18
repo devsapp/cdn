@@ -155,10 +155,10 @@ Properties:
         items:
           oneOf:
             - type: string
-              description: objectType时必须以http://或https://开头，不能重复。
+              description: 必须以http://或https://开头，不能重复。
               pattern: '^((https|http)?:\/\/)[^\s]+'
       area:
-        title: 预热URL
+        title: 预热区域
         description: 如果不传该参数，默认的预热区域为您的域名所配置的CDN加速区域。
         enum:
           - domestic
