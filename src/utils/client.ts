@@ -163,6 +163,7 @@ export class CDNClient {
                 logger.error(`The domain: [${domainName}] not found!`)
                 return false
             }
+            throw new CatchableError(e.message)
         }
         return true;
     }
