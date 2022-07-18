@@ -13,8 +13,12 @@ Service:
     Authorities: #权限描述
       - CDN
 Commands: # 指令，格式为指令：指令描述，例如：
-  deploy: 部署函数
-  invoke: 调用函数
+  deploy: 部署
+  start: 启动
+  stop: 停用
+  refresh: 刷新节点上的文件内容
+  warmUp: 预热源站内容
+  remove: 删除加速域名
 Properties:
   required:
     - cdnType
