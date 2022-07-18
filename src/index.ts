@@ -2,7 +2,7 @@ import logger from './common/logger';
 import {InputProps} from './common/entity';
 import {CDNConfig} from './lib/interface/cdn/CDNConfig';
 import {CDNClient} from './utils/client';
-import {handlerPreMethod, hasAddCname} from './utils/util';
+import {handlerPreMethod, helpAddCname} from './utils/util';
 import {CatchableError, inquirer} from "@serverless-devs/core";
 
 export default class CdnComponent{
@@ -34,11 +34,7 @@ export default class CdnComponent{
 
     // 校验cname是否已添加
     const cname = cdnDomain.cname;
-    if (!await hasAddCname(cname, domainName)) {
-      // 引导用户添加CNAME
-      logger.warn('Pleas go to the DNS service provider to configure the CNAME record')
-      logger.warn(`RecordValue: ${cname}`)
-    }
+    await helpAddCname(cname, domainName);
   }
 
   /**
@@ -50,7 +46,7 @@ export default class CdnComponent{
     const instant = await CDNClient.getInstant(inputs.credentials);
 
     const domainName = inputs.props.domainName;
-    const hasCdnDomain = await instant.hasCdnDomain(domainName);
+    const cdnDomain = await instant.getCdnDomain(domainName);
     const that = this
     const askForAddFun = async function () {
       const { addCdnDomain } = await inquirer.prompt([
@@ -65,7 +61,7 @@ export default class CdnComponent{
       }
     }
 
-    if (!hasCdnDomain) {
+    if (!cdnDomain) {
       await askForAddFun()
       return
     }
@@ -74,6 +70,10 @@ export default class CdnComponent{
     if (!success) {
       await askForAddFun();
     }
+
+    // 校验cname是否已添加
+    const cname = cdnDomain.cname;
+    await helpAddCname(cname, domainName);
   }
 
   /**

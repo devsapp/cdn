@@ -28,6 +28,14 @@ const PUSH_OBJECT_CACHE_CONFIG_AREAS = ['domestic', 'overseas']
 let SPINNER_VM : Ora = null
 export {SPINNER_VM}
 
+export async function helpAddCname(cname: string, domainName: string) {
+    if (!await hasAddCname(cname, domainName)) {
+        // 引导用户添加CNAME
+        logger.warn('Pleas go to the DNS service provider to configure the CNAME record')
+        logger.warn(`RecordValue: ${cname}`)
+    }
+}
+
 export async function hasAddCname(cname: string, domainName: string): Promise<boolean> {
     let cnames = []
     try {
