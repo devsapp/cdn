@@ -80,8 +80,8 @@ services:
 | checkUrl | String | 否 | 健康检测URL。 |
 | scope | String | 否 | 加速区域。取值：<br />- **domestic**（默认值）：仅中国内地。<br />- **overseas**：全球（不包含中国内地）。<br />- **global**：全球。<br /> |
 | topLevelDomain | String | 否 | 顶级接入域。 |
-| refreshConfig | Object | 进行refresh操作时必填<br />� | 刷新节点的文件内容配置 |
-| pushObjectCacheConfig<br />� | Object | 进行warmUp操作时必填<br />� | 预热源站内容配置<br /> |
+| refreshConfig | Object | 进行refresh操作时必填<br /> | 刷新节点的文件内容配置 |
+| pushObjectCacheConfig<br /> | Object | 进行warmUp操作时必填<br /> | 预热源站内容配置<br /> |
 
 <a name="WTuVN"></a>
 ### sources
