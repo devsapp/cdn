@@ -19,11 +19,12 @@ Commands: # 指令，格式为指令：指令描述，例如：
   refresh: 刷新节点上的文件内容
   warmUp: 预热源站内容
   remove: 删除加速域名
+  help: 帮助
 Properties:
   required:
     - cdnType
     - domainName
-    - source
+    - sources
   cdnType:
     title: 加速域名的业务类型
     enum:
