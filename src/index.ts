@@ -2,8 +2,8 @@ import logger from './common/logger';
 import {InputProps} from './common/entity';
 import {CDNConfig} from './lib/interface/cdn/CDNConfig';
 import {CDNClient} from './utils/client';
-import {handlerPreMethod, helpAddCname} from './utils/util';
-import {CatchableError, inquirer} from "@serverless-devs/core";
+import {askForAddFun, handlerPreMethod, HELP_INFO, helpAddCname, wait} from './utils/util';
+import {CatchableError, help} from "@serverless-devs/core";
 
 export default class CdnComponent{
 
@@ -15,7 +15,7 @@ export default class CdnComponent{
   async deploy(inputs: InputProps<CDNConfig>) {
     await handlerPreMethod(inputs);
 
-    const client = await CDNClient.getInstant(inputs.credentials)
+    const client = await CDNClient.getInstant(inputs)
     const config = inputs.props
     const domainName = config.domainName;
 
@@ -43,32 +43,19 @@ export default class CdnComponent{
    */
   async start(inputs: InputProps<CDNConfig>) {
     await handlerPreMethod(inputs);
-    const instant = await CDNClient.getInstant(inputs.credentials);
+    const instant = await CDNClient.getInstant(inputs);
 
     const domainName = inputs.props.domainName;
     const cdnDomain = await instant.getCdnDomain(domainName);
-    const that = this
-    const askForAddFun = async function () {
-      const { addCdnDomain } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'addCdnDomain',
-          message: 'Do you want to add the cdnDomain for you?'
-        }
-      ])
-      if (addCdnDomain) {
-        await that.deploy(inputs);
-      }
-    }
 
     if (!cdnDomain) {
-      await askForAddFun()
+      await askForAddFun(this.deploy, inputs);
       return
     }
 
     const success = await instant.startCdnDomain(domainName);
     if (!success) {
-      await askForAddFun();
+      await askForAddFun(this.deploy, inputs);
     }
 
     // 校验cname是否已添加
@@ -82,7 +69,7 @@ export default class CdnComponent{
    */
   async stop(inputs: InputProps<CDNConfig>) {
     await handlerPreMethod(inputs);
-    const instant = await CDNClient.getInstant(inputs.credentials);
+    const instant = await CDNClient.getInstant(inputs);
     await instant.stopCdnDomain(inputs.props.domainName);
 
   }
@@ -95,7 +82,7 @@ export default class CdnComponent{
     await handlerPreMethod(inputs, {
       requiredRefreshConfig: true
     });
-    const instant = await CDNClient.getInstant(inputs.credentials);
+    const instant = await CDNClient.getInstant(inputs);
     await instant.refreshObjectCaches(inputs.props.refreshConfig);
   }
 
@@ -107,7 +94,7 @@ export default class CdnComponent{
     await handlerPreMethod(inputs, {
       requiredPushObjectCacheConfig: true
     });
-    const instant = await CDNClient.getInstant(inputs.credentials);
+    const instant = await CDNClient.getInstant(inputs);
     await instant.pushObjectCache(inputs.props.pushObjectCacheConfig);
   }
 
@@ -118,7 +105,7 @@ export default class CdnComponent{
   async remove(inputs: InputProps<CDNConfig>) {
     await handlerPreMethod(inputs);
 
-    const instant = await CDNClient.getInstant(inputs.credentials);
+    const instant = await CDNClient.getInstant(inputs);
     await instant.deleteCdnDomain(inputs.props.domainName);
   }
 

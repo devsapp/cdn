@@ -2,7 +2,7 @@ import {promises} from "dns"
 import logger from "../common/logger"
 import {InputProps} from "../common/entity";
 import * as core from "@serverless-devs/core";
-import {CatchableError, getCredential, spinner} from "@serverless-devs/core";
+import {CatchableError, commandParse, getCredential, inquirer, spinner} from "@serverless-devs/core";
 import os from "os";
 import path from "path";
 import fs from "fs";
@@ -355,4 +355,82 @@ export function isInArray(arr: Array<any>, target: any): boolean {
     }
     return arr.findIndex(i => i == target) != -1;
 }
+
+/**
+ * 是否需要帮助添加不存在的cdnDomain
+ * @param deployFu 部署函数
+ * @param inputs
+ */
+export async function askForAddFun(deployFu: Function, inputs: InputProps<CDNConfig>) {
+    const c = commandParse(inputs)
+
+    // 通过参数选择是否自动创建不存在的cdnDomain
+    let autoCreate = c.data[AUTO_Create];
+
+    // autoCreate=true 不存在，尝试是否存在 autoCreate形式
+    if (!autoCreate) {
+        const args = c.data['_'];
+        if (!_.isEmpty(args)) {
+            autoCreate = isInArray(args, AUTO_Create)
+        }
+    }
+
+    if (autoCreate) {
+        await deployFu(inputs);
+    }
+
+    // 通过参数选择是否自动创建不存在的cdnDomain
+    const {addCdnDomain} = await inquirer.prompt([
+        {
+            type: 'confirm',
+            name: 'addCdnDomain',
+            message: 'Do you want to add the cdnDomain for you?'
+        }
+    ])
+    if (addCdnDomain) {
+        await deployFu(inputs);
+    }
+}
+
+/**
+ * 是否需要帮助开通cdn服务
+ * @param openFu cdn客户端开通cdn服务函数
+ */
+export async function askForOpenCdnService(openFu: Function, inputs: InputProps<CDNConfig>) {
+    const c = commandParse(inputs)
+
+    // 通过参数选择是否自动开通
+    let autoOpen = c.data[AUTO_OPEN];
+
+    // autoOpen=true 不存在，尝试是否存在 autoOpen形式
+    if (!autoOpen) {
+        const args = c.data['_'];
+        if (!_.isEmpty(args)) {
+            autoOpen = isInArray(args, AUTO_OPEN)
+        }
+    }
+
+    if (autoOpen) {
+        await openFu()
+        return
+    }
+
+
+    const {helpOpenCdnService} = await inquirer.prompt([
+        {
+            type: 'confirm',
+            name: 'helpOpenCdnService',
+            message: 'Do you want to open the CdnService for you?'
+        }
+    ])
+    if (helpOpenCdnService) {
+        await openFu()
+    } else {
+        throw new CatchableError('the cdnService is not open, could not do any option')
+    }
+}
+
+export async function wait(ms) {
+    return new Promise((resolve => setTimeout(() => resolve(1), ms)));
+};
 

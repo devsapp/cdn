@@ -1,4 +1,4 @@
-import {ICredentials} from '../common/entity';
+import {InputProps} from '../common/entity';
 import Cdn20180510, * as $Cdn20180510 from '@alicloud/cdn20180510';
 import * as $Cdn from '@alicloud/cdn20180510';
 import {
@@ -9,10 +9,10 @@ import {
 import * as $OpenApi from '@alicloud/openapi-client';
 import {CDNConfig} from '../lib/interface/cdn/CDNConfig';
 import logger from '../common/logger';
-import {CatchableError, inquirer} from '@serverless-devs/core';
+import {CatchableError} from '@serverless-devs/core';
 import {RefreshConfig} from "../lib/interface/cdn/RefreshConfig";
 import {PushObjectCacheConfig} from "../lib/interface/cdn/PushObjectCacheConfig";
-import {SPINNER_VM} from "./util";
+import {askForOpenCdnService, SPINNER_VM} from "./util";
 
 export class CDNClient {
 
@@ -20,7 +20,8 @@ export class CDNClient {
 
     private client: Cdn20180510
 
-    public static async getInstant(credentials: ICredentials): Promise<CDNClient> {
+    public static async getInstant(inputs: InputProps<CDNConfig>): Promise<CDNClient> {
+        const credentials = inputs.credentials;
 
         SPINNER_VM.info('create the instance of CdnClient')
         if (!CDNClient.instant) {
@@ -33,18 +34,7 @@ export class CDNClient {
             }))
         }
         if (!await CDNClient.instant.checkHasOpen()) {
-            const { helpOpenCdnService } = await inquirer.prompt([
-                {
-                    type: 'confirm',
-                    name: 'helpOpenCdnService',
-                    message: 'Do you want to open the CdnService for you?'
-                }
-            ])
-            if (helpOpenCdnService) {
-                await this.instant.openCdnService()
-            } else {
-                throw new CatchableError('the cdnService is not open, could not do any option')
-            }
+            await askForOpenCdnService(this.instant.openCdnService, inputs)
         }
 
         return CDNClient.instant
@@ -74,7 +64,7 @@ export class CDNClient {
 
     private async openCdnService() {
         SPINNER_VM.info('do open the CdnService')
-        await this.client.openCdnService(new OpenCdnServiceRequest({ internetChargeType: 'PayByTraffic'}));
+        await this.client.openCdnService(new OpenCdnServiceRequest({internetChargeType: 'PayByTraffic'}));
     }
 
     public async getCdnDomain(domainName: string): Promise<DescribeUserDomainsResponseBodyDomainsPageData> {
