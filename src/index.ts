@@ -123,6 +123,14 @@ export default class CdnComponent{
   }
 
   /**
+   * 帮助命令
+   * @param inputs
+   */
+  async help(inputs: InputProps<CDNConfig>) {
+    help(HELP_INFO)
+  }
+
+  /**
    * 将 SDK 方法抛出【待定】
    * @param inputs
    */
