@@ -28,6 +28,7 @@ export class CDNClient {
             CDNClient.instant.client = new Cdn20180510(new $OpenApi.Config({
                 accessKeyId: credentials.AccessKeyID,
                 accessKeySecret: credentials.AccessKeySecret,
+                securityToken: credentials.SecurityToken,
                 endpoint: 'cdn.aliyuncs.com'
             }))
         }
