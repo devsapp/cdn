@@ -29,6 +29,9 @@ export default class CdnComponent{
         throw new CatchableError('Owner verification of the root domain failed.', `Pleas go to the DNS service provider to configure the TXT record\nHost: [verification] Record Type: [TXT] RecordValue: [${domainVerifyContent}]`)
       }
       await client.addCdnDomain(config)
+
+      // 等待5秒，尽量保证可以获取到cname
+      await wait(7000);
       cdnDomain = await client.getCdnDomain(domainName)
     }
 
