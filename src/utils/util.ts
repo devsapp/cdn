@@ -15,7 +15,7 @@ import {Ora} from "ora";
 const {lodash: _} = core;
 const MINIMIST_HELP_OPT = {
     boolean: ['help'],
-    alias: { help: 'h' },
+    alias: {help: 'h'},
 }
 
 const CDN_TYPES = ['web', 'download', 'video']
@@ -98,7 +98,10 @@ export async function hasAddCname(cname: string, domainName: string): Promise<bo
  * 所有操作的前置处理
  * @param inputs
  */
-export async function handlerPreMethod(inputs: InputProps<CDNConfig>, { requiredRefreshConfig, requiredPushObjectCacheConfig }: { requiredRefreshConfig?: boolean; requiredPushObjectCacheConfig?: boolean } = {}) {
+export async function handlerPreMethod(inputs: InputProps<CDNConfig>, {
+    requiredRefreshConfig,
+    requiredPushObjectCacheConfig
+}: { requiredRefreshConfig?: boolean; requiredPushObjectCacheConfig?: boolean } = {}) {
 
     // 判断是否是 help，如果是则退出不处理
     if (isHelp(inputs.args, inputs.argsObj)) {
@@ -123,7 +126,10 @@ export async function initCredentials(inputs: InputProps<CDNConfig>) {
     }
 }
 
-export function validateProps(inputs: InputProps<CDNConfig>, { requiredRefreshConfig, requiredPushObjectCacheConfig }: { requiredRefreshConfig?: boolean; requiredPushObjectCacheConfig?: boolean } = {}) {
+export function validateProps(inputs: InputProps<CDNConfig>, {
+    requiredRefreshConfig,
+    requiredPushObjectCacheConfig
+}: { requiredRefreshConfig?: boolean; requiredPushObjectCacheConfig?: boolean } = {}) {
     SPINNER_VM.start('start to verify the validity of props');
     const errMsgs = []
 
@@ -272,7 +278,7 @@ export function sourcesValidate(sources: Array<SourceConfig>): Array<string> {
     }
 
     sources.forEach((i, index) => {
-        index = index +1
+        index = index + 1
         if (!(i instanceof Object)) {
             errmsgs.push(`sources's NO.${index} item verify fail，sources's item expected is Object that contain type, content, port, priority, weight`)
         }
