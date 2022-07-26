@@ -80,7 +80,7 @@ export async function handlerPreMethod(inputs: InputProps<CDNConfig>, { required
 
 export async function initCredentials(inputs: InputProps<CDNConfig>) {
     SPINNER_VM.info('init credentials')
-    if (!inputs.credentials) {
+    if (_.isEmpty(inputs.credentials)) {
         inputs.credentials = await getCredential(inputs.project.access);
     }
 }
