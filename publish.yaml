@@ -8,10 +8,10 @@ HomePage: https://github.com/devsapp/cdn
 Tags: #标签详情
   - CDN
 Category: 基础云服务
-Service:
-  服务名:
-    Authorities: #权限描述
-      - AliyunCDNFullAccess
+# Service:
+#   服务名:
+#     Authorities: #权限描述
+#       - AliyunCDNFullAccess
 Commands: # 指令，格式为指令：指令描述，例如：
   deploy: 部署
   start: 启动
