@@ -1,9 +1,9 @@
 Type: Component
 Name: cdn
 Provider:
-  - aliyun
+  - 阿里云
 Version: dev
-Description: CDN 操作
+Description: 阿里云CDN 操作
 HomePage: https://github.com/devsapp/cdn
 Tags: #标签详情
   - CDN
@@ -11,7 +11,7 @@ Category: 基础云服务
 Service:
   服务名:
     Authorities: #权限描述
-      - CDN
+      - AliyunCDNFullAccess
 Commands: # 指令，格式为指令：指令描述，例如：
   deploy: 部署
   start: 启动
