@@ -5,8 +5,8 @@ export interface ICredentials {
   SecurityToken?: string;
 }
 
-export interface InputProps {
-  props: any; // 用户自定义输入
+export interface InputProps<T> {
+  props: T; // 用户自定义输入
   credentials: ICredentials; // 用户秘钥
   appName: string; // 
   project: {
