@@ -46,7 +46,7 @@ Properties:
     type: array
     title: 回源地址列表
     default: []
-    examples: [],
+    examples: []
     minItems: 1
     uniqueItems: true
     items:
@@ -123,13 +123,12 @@ Properties:
         type: array
         title: 刷新URL
         default: [ ]
-        examples: [ ],
+        examples: [ ]
         uniqueItems: true
         items:
           oneOf:
             - type: string
-              description: objectType时必须以http://或https://开头，不能重复。
-              文件刷新和目录刷新的功能说明请参考<a href='https://help.aliyun.com/document_detail/27140.html?spm=api-workbench.API%20Explorer.0.0.48731e0fH4DOa6'>刷新和预热资源</a>，正则刷新的功能说明和操作示例请参考<a href='https://help.aliyun.com/document_detail/146195.html?spm=api-workbench.API%20Explorer.0.0.48731e0fH4DOa6'>正则刷新说明</a>。
+              description: "objectType时必须以http://或https://开头，不能重复。请参考<a href='https://help.aliyun.com/document_detail/27140.html?spm=api-workbench.API%20Explorer.0.0.48731e0fH4DOa6'>刷新和预热资源</a>，正则刷新的功能说明和操作示例请参考<a href='https://help.aliyun.com/document_detail/146195.html?spm=api-workbench.API%20Explorer.0.0.48731e0fH4DOa6'>正则刷新说明</a>。"
         objectType:
           default: File
           title: 刷新的类型
@@ -151,7 +150,7 @@ Properties:
         type: array
         title: 预热URL
         default: [ ]
-        examples: [ ],
+        examples: [ ]
         uniqueItems: true
         items:
           oneOf:
@@ -171,9 +170,3 @@ Properties:
         title: 是否直接预热到L2节点
         type: boolean
         description: true：代表预热的节点层级必须包含L2节点。false：代表仅预热回源层节点（false为默认值，回源层节点可能是L2节点，也可能是L3节点）。
-
-
-
-
-
-
