@@ -2,7 +2,7 @@ Type: Component
 Name: cdn
 Provider:
   - aliyun
-Version: 0.0.1
+Version: dev
 Description: CDN 操作
 HomePage: https://github.com/devsapp/cdn
 Tags: #标签详情
