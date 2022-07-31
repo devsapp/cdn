@@ -328,16 +328,20 @@ export function isInArray(arr: Array<any>, target: any): boolean {
  * @param inputs
  */
 export async function askForAddFun(deployFu: Function, inputs: InputProps<CDNConfig>) {
-    const c = commandParse(inputs)
+    let autoCreate = inputs.props.autoCreate;
 
-    // 通过参数选择是否自动创建不存在的cdnDomain
-    let autoCreate = c.data[AUTO_Create];
-
-    // autoCreate=true 不存在，尝试是否存在 autoCreate形式
     if (!autoCreate) {
-        const args = c.data['_'];
-        if (!_.isEmpty(args)) {
-            autoCreate = isInArray(args, AUTO_Create)
+        const c = commandParse(inputs)
+
+        // 通过参数选择是否自动创建不存在的cdnDomain
+        autoCreate = c.data[AUTO_CREATE];
+
+        // autoCreate=true 不存在，尝试是否存在 autoCreate形式
+        if (!autoCreate) {
+            const args = c.data['_'];
+            if (!_.isEmpty(args)) {
+                autoCreate = isInArray(args, AUTO_CREATE)
+            }
         }
     }
 
@@ -363,16 +367,21 @@ export async function askForAddFun(deployFu: Function, inputs: InputProps<CDNCon
  * @param openFu cdn客户端开通cdn服务函数
  */
 export async function askForOpenCdnService(openFu: Function, inputs: InputProps<CDNConfig>) {
-    const c = commandParse(inputs)
 
-    // 通过参数选择是否自动开通
-    let autoOpen = c.data[AUTO_OPEN];
+    let autoOpen = inputs.props.autoOpen;
 
-    // autoOpen=true 不存在，尝试是否存在 autoOpen形式
     if (!autoOpen) {
-        const args = c.data['_'];
-        if (!_.isEmpty(args)) {
-            autoOpen = isInArray(args, AUTO_OPEN)
+        const c = commandParse(inputs);
+
+        // 通过参数选择是否自动开通
+        autoOpen = c.data[AUTO_OPEN];
+
+        // autoOpen=true 不存在，尝试是否存在 autoOpen形式
+        if (!autoOpen) {
+            const args = c.data['_'];
+            if (!_.isEmpty(args)) {
+                autoOpen = isInArray(args, AUTO_OPEN);
+            }
         }
     }
 
@@ -390,13 +399,114 @@ export async function askForOpenCdnService(openFu: Function, inputs: InputProps<
         }
     ])
     if (helpOpenCdnService) {
-        await openFu()
+        await openFu();
     } else {
-        throw new CatchableError('the cdnService is not open, could not do any option')
+        throw new CatchableError('the cdnService is not open, could not do any option');
+    }
+}
+
+/**
+ * 是否启用加速域名，在更新加速域名信息是，如果为启用，无法进行更新
+ * @param startFu
+ * @param inputs
+ */
+export async function askForStartCdnDomain(startFu: Function, inputs: InputProps<CDNConfig>) {
+    const props = inputs.props;
+    let autoStart = props.autoStart
+
+    if (!autoStart) {
+        const c = commandParse(inputs);
+
+        // 通过参数选择是否自动开通
+        c.data[AUTO_START];
+
+        // autoStart=true 不存在，尝试是否存在 autoStart形式
+        if (!autoStart) {
+            const args = c.data['_'];
+            if (!_.isEmpty(args)) {
+                autoStart = isInArray(args, AUTO_OPEN);
+            }
+        }
+    }
+
+    if (autoStart) {
+        await startFu(props.domainName, {waitUntilFinished: props.waitUntilFinished});
+        return;
+    }
+
+    const {helpOpenCdnService: helpStartCdnDomain} = await inquirer.prompt([
+        {
+            type: 'confirm',
+            name: 'helpOpenCdnService',
+            message: 'Do you want to start the cdnDomain for you?'
+        }
+    ])
+    if (helpStartCdnDomain) {
+        await startFu(props.domainName, {waitUntilFinished: props.waitUntilFinished});
+    } else {
+        throw new CatchableError('the cdnDomain is stopped, could not do any option');
     }
 }
 
 export async function wait(ms) {
     return new Promise((resolve => setTimeout(() => resolve(1), ms)));
-};
+}
+
+export async function retry(maxWaitMs: number, fu: Function, interval: number = 10000) {
+    let counter = 0;
+    let res = null;
+    do {
+        await wait(interval);
+        counter += interval;
+        res = await fu();
+    } while (!res && counter <= maxWaitMs);
+    return res;
+}
+
+/**
+ * 状态是否处于变更中
+ * @param status
+ */
+export function isChanging(status: string): boolean {
+    return status.includes('ing');
+}
+
+/**
+ * 设置默认值
+ * @param inputs
+ */
+function setDefalutVal(inputs: InputProps<CDNConfig>) {
+    const props = inputs.props;
+
+    if (typeof props.waitUntilFinished !== 'boolean') {
+        props.waitUntilFinished = true;
+    }
+
+    if (props.waitUntilFinished && !props.maxWaitMs) {
+        props.maxWaitMs = DEFAULT_MAX_WAIT_MS;
+    }
+
+    if (typeof props.refreshAfterDeploy !== 'boolean') {
+        props.refreshAfterDeploy = true;
+    }
+
+    if (props.refreshAfterDeploy && (_.isEmpty(props.refreshConfig) || (_.isEmpty(props.refreshConfig.objectPaths)))) {
+        props.refreshConfig = {
+            objectPaths: [`http://${props.domainName}/`],
+            objectType : 'Directory'
+        }
+    }
+
+    if (typeof props.autoOpen !== 'boolean') {
+        props.autoOpen = true;
+    }
+
+    if (typeof props.autoCreate !== 'boolean') {
+        props.autoCreate = true;
+    }
+
+    if (typeof props.autoStart !== 'boolean') {
+        props.autoStart = true;
+    }
+}
 

@@ -12,7 +12,8 @@ import logger from '../common/logger';
 import {CatchableError} from '@serverless-devs/core';
 import {RefreshConfig} from "../lib/interface/cdn/RefreshConfig";
 import {PushObjectCacheConfig} from "../lib/interface/cdn/PushObjectCacheConfig";
-import {askForOpenCdnService, SPINNER_VM} from "./util";
+import {askForOpenCdnService, retry, SPINNER_VM} from "./util";
+import {DEFAULT_MAX_WAIT_MS} from "../common/contants";
 
 export class CDNClient {
 
@@ -124,6 +125,15 @@ export class CDNClient {
         request.sources = JSON.stringify(cdnConfig.sources)
         await this.client.addCdnDomain(request);
 
+        if (waitUntilFinished) {
+            const getCdnDomainFn = this.getCdnDomain;
+            await retry(DEFAULT_MAX_WAIT_MS, async () => {
+                const r = await getCdnDomainFn(domainName);
+                return r.domainStatus.includes('ing') ? null : r;
+            })
+        }
+        SPINNER_VM.info(`create cdnDomain<${domainName}> success!`)
+        SPINNER_VM.stop();
     }
 
     public async updateCdnDomain(cdnConfig: CDNConfig) {
@@ -131,6 +141,15 @@ export class CDNClient {
         let request = new $Cdn20180510.ModifyCdnDomainRequest(cdnConfig);
         request.sources = JSON.stringify(cdnConfig.sources)
         await this.client.modifyCdnDomain(request);
+        if (waitUntilFinished) {
+            const getCdnDomainFn = this.getCdnDomain;
+            await retry(DEFAULT_MAX_WAIT_MS, async () => {
+                const r = await getCdnDomainFn(domainName);
+                return r.domainStatus.includes('ing') ? null : r;
+            })
+        }
+        SPINNER_VM.info(`update cdnDomain<${domainName}> success!`)
+        SPINNER_VM.stop();
 
         // 修改加速区域
         const scope = cdnConfig.scope;
@@ -140,7 +159,16 @@ export class CDNClient {
                 domainName: cdnConfig.domainName,
                 property: `{\\"coverage\\":\\"${scope}\\"}`
             });
-            await this.client.modifyCdnDomainSchdmByProperty(modifySchdmRequest)
+            await this.client.modifyCdnDomainSchdmByProperty(modifySchdmRequest);
+            if (waitUntilFinished) {
+                const getCdnDomainFn = this.getCdnDomain;
+                await retry(DEFAULT_MAX_WAIT_MS, async () => {
+                    const r = await getCdnDomainFn(domainName);
+                    return r.domainStatus.includes('ing') ? null : r;
+                })
+            }
+            SPINNER_VM.info('update cdnDomain scope success!')
+            SPINNER_VM.stop();
         }
     }
 
@@ -148,7 +176,14 @@ export class CDNClient {
         SPINNER_VM.info('start cdnDomain')
         let request = new $Cdn20180510.StartCdnDomainRequest({domainName})
         try {
-            await this.client.startCdnDomain(request)
+            await this.client.startCdnDomain(request);
+            if (waitUntilFinished) {
+                const getCdnDomainFn = this.getCdnDomain;
+                await retry(DEFAULT_MAX_WAIT_MS, async () => {
+                    const r = await getCdnDomainFn(domainName);
+                    return r.domainStatus.includes('ing') ? null : r;
+                })
+            }
         } catch (e) {
             if (e.indexOf('NotFound')) {
                 logger.error(`The domain: [${domainName}] not found!`)
@@ -159,10 +194,16 @@ export class CDNClient {
         return true;
     }
 
-    public async stopCdnDomain(domainName: string) {
-        SPINNER_VM.info('stop cdnDomain')
-        if (!this.hasCdnDomain) {
-            throw new CatchableError(`The domain: [${domainName}] not found!`)
+    public async stopCdnDomain(domainName: string, {waitUntilFinished}: { waitUntilFinished?: boolean } = {}) {
+        SPINNER_VM.start(`stopping cdnDomain ${domainName}`);
+        let request = new $Cdn20180510.StopCdnDomainRequest({domainName});
+        await this.client.stopCdnDomain(request);
+        if (waitUntilFinished) {
+            const getCdnDomainFn = this.getCdnDomain;
+            await retry(DEFAULT_MAX_WAIT_MS, async () => {
+                const r = await getCdnDomainFn(domainName);
+                return r.domainStatus.includes('ing') ? null : r;
+            })
         }
         let request = new $Cdn20180510.StopCdnDomainRequest({domainName})
         await this.client.stopCdnDomain(request)
@@ -177,8 +218,16 @@ export class CDNClient {
         }
 
         let request = new $Cdn20180510.DeleteCdnDomainRequest({domainName});
-        SPINNER_VM.info('do delete cdnDomain')
-        this.client.deleteCdnDomain(request)
+        await this.client.deleteCdnDomain(request);
+        if (waitUntilFinished) {
+            const getCdnDomainFn = this.getCdnDomain;
+            await retry(DEFAULT_MAX_WAIT_MS, async () => {
+                const r = await getCdnDomainFn(domainName);
+                return !r;
+            })
+        }
+        SPINNER_VM.info(`delete cdnDomain<${domainName}> success!`)
+        SPINNER_VM.stop();
     }
 
     public async refreshObjectCaches(refreshConfig: RefreshConfig) {
@@ -194,7 +243,10 @@ export class CDNClient {
         await this.client.pushObjectCache(new PushObjectCacheRequest({
             objectPath: pushObjectCacheConfig.objectPaths.join('\n'),
             area: pushObjectCacheConfig.area,
-            l2Preload: pushObjectCacheConfig.L2Preload
-        }))
+            l2Preload: pushObjectCacheConfig.l2Preload
+        }));
+
+        SPINNER_VM.info('push object caches task has been pushed!');
+        SPINNER_VM.stop();
     }
 }

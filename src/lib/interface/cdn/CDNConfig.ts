@@ -11,4 +11,10 @@ export interface CDNConfig {
     topLevelDomain?: string
     refreshConfig? : RefreshConfig
     pushObjectCacheConfig? : PushObjectCacheConfig
+    waitUntilFinished: boolean
+    maxWaitMs: number
+    refreshAfterDeploy: boolean
+    autoOpen: boolean
+    autoCreate: boolean
+    autoStart: boolean
 }

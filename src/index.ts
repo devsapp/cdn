@@ -2,80 +2,118 @@ import logger from './common/logger';
 import {InputProps} from './common/entity';
 import {CDNConfig} from './lib/interface/cdn/CDNConfig';
 import {CDNClient} from './utils/client';
-import {askForAddFun, handlerPreMethod, HELP_INFO, helpAddCname, wait} from './utils/util';
-import {CatchableError, help} from "@serverless-devs/core";
+import {askForAddFun, askForStartCdnDomain, handlerPreMethod, helpAddCname, isChanging, wait} from './utils/util';
+import {CatchableError, help, lodash as _} from "@serverless-devs/core";
+import {HELP_INFO} from "./common/contants";
 
 export default class CdnComponent{
 
-  /**
-   * 修改或者添加加速域名的配置
-   * @param inputs
-   * @returns
-   */
-  async deploy(inputs: InputProps<CDNConfig>) {
-    await handlerPreMethod(inputs);
+    /**
+     * 修改或者添加加速域名的配置
+     * @param inputs
+     * @returns
+     */
+    async deploy(inputs: InputProps<CDNConfig>) {
+        await handlerPreMethod(inputs);
 
-    const client = await CDNClient.getInstant(inputs)
-    const config = inputs.props
-    const domainName = config.domainName;
+        const client = await CDNClient.getInstant(inputs);
+        const config = inputs.props;
+        const domainName = config.domainName;
 
-    let cdnDomain = await client.getCdnDomain(domainName)
-    if (cdnDomain) {
-      await client.updateCdnDomain(config)
-    } else {
-      // 校验域名归属
-      if (!await client.domainHasVerify(domainName)) {
-        const domainVerifyContent = await client.getDomainVerifyContent(domainName);
-        throw new CatchableError('Owner verification of the root domain failed.', `Pleas go to the DNS service provider to configure the TXT record\nHost: [verification] Record Type: [TXT] RecordValue: [${domainVerifyContent}]`)
-      }
-      await client.addCdnDomain(config)
+        let cdnDomain = await client.getCdnDomain(domainName);
+        if (cdnDomain) {
+            // 是否处于变更中
+            if (isChanging(cdnDomain.domainStatus)) {
+                throw new CatchableError('Please try it later!', 'The cdnDomain is changing!');
+            }
 
-      // 等待5秒，尽量保证可以获取到cname
-      await wait(7000);
-      cdnDomain = await client.getCdnDomain(domainName)
+            // 是否已停用
+            if (cdnDomain.domainStatus == 'offline') {
+                await askForStartCdnDomain(client.startCdnDomain, inputs);
+            }
+
+            await client.updateCdnDomain(config);
+        } else {
+            // 校验域名归属
+            if (!await client.domainHasVerify(domainName)) {
+                const domainVerifyContent = await client.getDomainVerifyContent(domainName);
+                throw new CatchableError('Owner verification of the root domain failed.', `Pleas go to the DNS service provider to configure the TXT record\nHost: [verification] Record Type: [TXT] RecordValue: [${domainVerifyContent}]`);
+            }
+            await client.addCdnDomain(config, {waitUntilFinished: config.waitUntilFinished});
+
+            // 重试5次，尽量保证可以获取到cname
+            let counter = 5;
+            do {
+                if (counter <= 0) {
+                    break;
+                }
+                await wait(counter-- * 1000);
+                cdnDomain = await client.getCdnDomain(domainName);
+            } while (_.isEmpty(cdnDomain.cname));
+        }
+
+        if (config.refreshAfterDeploy) {
+            await client.refreshObjectCaches(config.refreshConfig);
+        }
+
+        // 校验cname是否已添加
+        const cname = cdnDomain.cname;
+        await helpAddCname(cname, domainName);
     }
 
-    // 校验cname是否已添加
-    const cname = cdnDomain.cname;
-    await helpAddCname(cname, domainName);
-  }
+    /**
+     * 启用配置的域名并且状态为停用的加速域名
+     * @param inputs
+     */
+    async start(inputs: InputProps<CDNConfig>) {
+        await handlerPreMethod(inputs);
+        const instant = await CDNClient.getInstant(inputs);
 
-  /**
-   * 启用配置的域名并且状态为停用的加速域名
-   * @param inputs
-   */
-  async start(inputs: InputProps<CDNConfig>) {
-    await handlerPreMethod(inputs);
-    const instant = await CDNClient.getInstant(inputs);
+        const domainName = inputs.props.domainName;
+        const cdnDomain = await instant.getCdnDomain(domainName);
 
-    const domainName = inputs.props.domainName;
-    const cdnDomain = await instant.getCdnDomain(domainName);
+        if (_.isEmpty(cdnDomain)) {
+            await askForAddFun(this.deploy, inputs);
+            return;
+        }
 
-    if (!cdnDomain) {
-      await askForAddFun(this.deploy, inputs);
-      return
+        // 是否处于变更中
+        if (isChanging(cdnDomain.domainStatus)) {
+            throw new CatchableError('Please try it later!', 'The cdnDomain is changing!');
+        }
+
+        const success = await instant.startCdnDomain(domainName);
+        if (!success) {
+            await askForAddFun(this.deploy, inputs);
+        }
+
+        // 校验cname是否已添加
+        const cname = cdnDomain.cname;
+        await helpAddCname(cname, domainName);
     }
 
-    const success = await instant.startCdnDomain(domainName);
-    if (!success) {
-      await askForAddFun(this.deploy, inputs);
+    /**
+     * 停用配置的加速域名
+     * @param inputs
+     */
+    async stop(inputs: InputProps<CDNConfig>) {
+        await handlerPreMethod(inputs);
+        const instant = await CDNClient.getInstant(inputs);
+
+        const domainName = inputs.props.domainName;
+        const cdnDomain = await instant.getCdnDomain(domainName);
+
+        if (_.isEmpty(cdnDomain)) {
+            throw new CatchableError(`The domain: [${domainName}] not found!`);
+        }
+
+        // 是否处于变更中
+        if (isChanging(cdnDomain.domainStatus)) {
+            throw new CatchableError('Please try it later!', 'The cdnDomain is changing!');
+        }
+        await instant.stopCdnDomain(inputs.props.domainName);
+
     }
-
-    // 校验cname是否已添加
-    const cname = cdnDomain.cname;
-    await helpAddCname(cname, domainName);
-  }
-
-  /**
-   * 停用配置的加速域名
-   * @param inputs
-   */
-  async stop(inputs: InputProps<CDNConfig>) {
-    await handlerPreMethod(inputs);
-    const instant = await CDNClient.getInstant(inputs);
-    await instant.stopCdnDomain(inputs.props.domainName);
-
-  }
 
   /**
    * 刷新节点上的文件内容
@@ -101,16 +139,29 @@ export default class CdnComponent{
     await instant.pushObjectCache(inputs.props.pushObjectCacheConfig);
   }
 
-  /**
-   * 删除加速域名
-   * @param inputs
-   */
-  async remove(inputs: InputProps<CDNConfig>) {
-    await handlerPreMethod(inputs);
+    /**
+     * 删除加速域名
+     * @param inputs
+     */
+    async remove(inputs: InputProps<CDNConfig>) {
+        await handlerPreMethod(inputs);
 
-    const instant = await CDNClient.getInstant(inputs);
-    await instant.deleteCdnDomain(inputs.props.domainName);
-  }
+        const instant = await CDNClient.getInstant(inputs);
+
+        const domainName = inputs.props.domainName;
+        const cdnDomain = await instant.getCdnDomain(domainName);
+
+        if (_.isEmpty(cdnDomain)) {
+            throw new CatchableError(`The domain: [${domainName}] not found!`);
+        }
+
+        // 是否处于变更中
+        if (isChanging(cdnDomain.domainStatus)) {
+            throw new CatchableError('Please try it later!', 'The cdnDomain is changing!');
+        }
+
+        await instant.deleteCdnDomain(inputs.props.domainName);
+    }
 
   /**
    * 帮助命令
