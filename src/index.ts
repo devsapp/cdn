@@ -6,7 +6,7 @@ import {askForAddFun, askForStartCdnDomain, handlerPreMethod, helpAddCname, isCh
 import {CatchableError, help, lodash as _} from "@serverless-devs/core";
 import {HELP_INFO} from "./common/contants";
 
-export default class CdnComponent{
+export default class CdnComponent {
 
     /**
      * 修改或者添加加速域名的配置
@@ -115,29 +115,29 @@ export default class CdnComponent{
 
     }
 
-  /**
-   * 刷新节点上的文件内容
-   * @param inputs
-   */
-  async refresh(inputs: InputProps<CDNConfig>) {
-    await handlerPreMethod(inputs, {
-      requiredRefreshConfig: true
-    });
-    const instant = await CDNClient.getInstant(inputs);
-    await instant.refreshObjectCaches(inputs.props.refreshConfig);
-  }
+    /**
+     * 刷新节点上的文件内容
+     * @param inputs
+     */
+    async refresh(inputs: InputProps<CDNConfig>) {
+        await handlerPreMethod(inputs, {
+            requiredRefreshConfig: true
+        });
+        const instant = await CDNClient.getInstant(inputs);
+        await instant.refreshObjectCaches(inputs.props.refreshConfig);
+    }
 
-  /**
-   * 预热源站内容
-   * @param inputs
-   */
-  async warmUp(inputs: InputProps<CDNConfig>) {
-    await handlerPreMethod(inputs, {
-      requiredPushObjectCacheConfig: true
-    });
-    const instant = await CDNClient.getInstant(inputs);
-    await instant.pushObjectCache(inputs.props.pushObjectCacheConfig);
-  }
+    /**
+     * 预热源站内容
+     * @param inputs
+     */
+    async warmUp(inputs: InputProps<CDNConfig>) {
+        await handlerPreMethod(inputs, {
+            requiredPushObjectCacheConfig: true
+        });
+        const instant = await CDNClient.getInstant(inputs);
+        await instant.pushObjectCache(inputs.props.pushObjectCacheConfig);
+    }
 
     /**
      * 删除加速域名
@@ -163,19 +163,19 @@ export default class CdnComponent{
         await instant.deleteCdnDomain(inputs.props.domainName);
     }
 
-  /**
-   * 帮助命令
-   * @param inputs
-   */
-  async help(inputs: InputProps<CDNConfig>) {
-    help(HELP_INFO)
-  }
+    /**
+     * 帮助命令
+     * @param inputs
+     */
+    async help(inputs: InputProps<CDNConfig>) {
+        help(HELP_INFO);
+    }
 
-  /**
-   * 将 SDK 方法抛出【待定】
-   * @param inputs
-   */
-  async api(inputs: InputProps<CDNConfig>) {
-    logger.log(JSON.stringify(inputs, null, 2));
-  }
+    /**
+     * 将 SDK 方法抛出【待定】
+     * @param inputs
+     */
+    async api(inputs: InputProps<CDNConfig>) {
+        logger.log(JSON.stringify(inputs, null, 2));
+    }
 }
