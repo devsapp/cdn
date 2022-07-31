@@ -11,60 +11,20 @@ import {SourceConfig} from "../lib/interface/cdn/SourceConfig";
 import {RefreshConfig} from "../lib/interface/cdn/RefreshConfig";
 import {PushObjectCacheConfig} from "../lib/interface/cdn/PushObjectCacheConfig";
 import {Ora} from "ora";
+import {
+    MINIMIST_HELP_OPT,
+    AUTO_CREATE, AUTO_OPEN,
+    CDN_TYPES, DEFAULT_MAX_WAIT_MS,
+    PUSH_OBJECT_CACHE_CONFIG_AREAS,
+    REFRESH_CONFIG_OBJECT_TYPES, SCOPES,
+    SOURCE_PRIORITIES,
+    SOURCE_TYPES, SOURCE_WEIGHT_MAX_VAL, AUTO_START
+} from "../common/contants";
 
 const {lodash: _} = core;
-const MINIMIST_HELP_OPT = {
-    boolean: ['help'],
-    alias: {help: 'h'},
-}
-
-const CDN_TYPES = ['web', 'download', 'video']
-const SOURCE_TYPES = ['ipaddr', 'domain', 'oss', 'fc_domain']
-const SOURCE_PRIORITIES = [20, 30]
-const SOURCE_WEIGHT_MAX_VAL = 100
-const SCOPES = ['domestic', 'overseas', 'global']
-const REFRESH_CONFIG_OBJECT_TYPES = ['File', 'Directory', 'Regex']
-const PUSH_OBJECT_CACHE_CONFIG_AREAS = ['domestic', 'overseas']
-const HELP_INFO = [
-    {
-        header: 'CDN Component',
-        content: 'Help you deploy、start、stop、remove cnd domain and refresh object caches、push object cache'
-    },
-    {
-        header: 'Commands',
-        content: [
-            {
-                name: 'deploy',
-                summary: 'Help you create or update the cdn domain. required props: cdnType、domainName、sources.'
-            },
-            {
-                name: 'start',
-                summary: 'Help you start the cdn domain. required props: cdnType、domainName、sources.'
-            },
-            {
-                name: 'stop',
-                summary: 'Help you stop the cdn domain. required props: cdnType、domainName、sources.'
-            },
-            {
-                name: 'remove',
-                summary: 'Help you remove the cdn domain. required props: cdnType、domainName、sources.'
-            },
-            {
-                name: 'refresh',
-                summary: 'Help you refresh object caches. required props: cdnType、domainName、sources、refreshConfig.'
-            },
-            {
-                name: 'warmUp',
-                summary: 'Help you push object cache. required props: cdnType、domainName、sources、pushObjectCacheConfig.'
-            },
-        ]
-    }
-]
-const AUTO_OPEN = 'autoOpen'
-const AUTO_Create = 'autoCreate'
 
 let SPINNER_VM: Ora = null
-export {SPINNER_VM, HELP_INFO}
+export {SPINNER_VM}
 
 export async function helpAddCname(cname: string, domainName: string) {
     if (!await hasAddCname(cname, domainName)) {
