@@ -71,6 +71,15 @@ export async function handlerPreMethod(inputs: InputProps<CDNConfig>, {
     SPINNER_VM = spinner('start action')
 
     await initCredentials(inputs);
+
+    // 设置默认值
+    setDefaultVal(inputs);
+
+    // 如果deploy后需要刷新的话，需要校验刷新参数正确性
+    if (inputs.props.refreshAfterDeploy) {
+        requiredRefreshConfig = true;
+    }
+
     // 校验props
     validateProps(inputs, {requiredRefreshConfig, requiredPushObjectCacheConfig});
 
@@ -486,7 +495,7 @@ export function isChanging(status: string): boolean {
  * 设置默认值
  * @param inputs
  */
-function setDefalutVal(inputs: InputProps<CDNConfig>) {
+function setDefaultVal(inputs: InputProps<CDNConfig>) {
     const props = inputs.props;
 
     if (typeof props.waitUntilFinished !== 'boolean') {
