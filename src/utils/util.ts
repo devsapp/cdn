@@ -179,14 +179,15 @@ export function refreshConfigValidate(refreshConfig: RefreshConfig, domainName: 
             i = i.trim();
             index = index + 1;
             if (!i.startsWith('http://') && !i.startsWith('https://')) {
-                errMsgs.push(`objectPaths's NO.${index} item verify fail，objectPaths's item expected is string that start with [http://] or [https://]!`)
+                errMsgs.push(`objectPaths's NO.${index} item verify fail，objectPaths's item expected is string that start with [http://] or [https://]!`);
+            } else {
+                const host = new URL(i).host;
+                if (domainName && host != domainName) {
+                    errMsgs.push(`objectPaths's NO.${index} item verify fail，objectPaths's item expected is url that host is domainName: ${domainName}!`);
+                }
             }
             if (objectType == 'Directory' && !i.endsWith("/")) {
-                errMsgs.push(`objectPaths's NO.${index} item verify fail，objectPaths's item expected is string that end with [/]!`)
-            }
-            const host = new URL(i).host;
-            if (domainName && host != domainName) {
-                errMsgs.push(`objectPaths's NO.${index} item verify fail，objectPaths's item expected is url that host is domainName: ${domainName}!`)
+                errMsgs.push(`objectPaths's NO.${index} item verify fail，objectPaths's item expected is string that end with [/]!`);
             }
         })
     }
@@ -216,11 +217,12 @@ export function pushObjectCacheConfigValidate(pushObjectCacheConfig: PushObjectC
     objectPaths.forEach((i, index) => {
         index = index + 1;
         if (!i.startsWith('http://') && !i.startsWith('https://')) {
-            errMsgs.push(`objectPaths's NO.${index} item verify fail，objectPaths's item expected is string that start with [http://] or [https://]!`)
-        }
-        const host = new URL(i).host;
-        if (domainName && host != domainName) {
-            errMsgs.push(`objectPaths's NO.${index} item verify fail，objectPaths's item expected is url that host is domainName: ${domainName}!`)
+            errMsgs.push(`objectPaths's NO.${index} item verify fail，objectPaths's item expected is string that start with [http://] or [https://]!`);
+        } else {
+            const host = new URL(i).host;
+            if (domainName && host != domainName) {
+                errMsgs.push(`objectPaths's NO.${index} item verify fail，objectPaths's item expected is url that host is domainName: ${domainName}!`);
+            }
         }
     })
 
