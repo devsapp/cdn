@@ -21,7 +21,7 @@
   "scripts": {
     "start": "npm run watch",
     "watch": "tsc -w",
-    "prebuild": "rimraf package-lock.json && rimraf dist && rimraf node_modules && npm i",
+    "prebuild": "npm install rimraf --no-save && rimraf package-lock.json && rimraf dist && rimraf node_modules && npm i",
     "postbuild": "rimraf -rf package-lock.json && rimraf -rf node_modules && npm install @alicloud/openapi-client",
     "build": "esbuild src/index.ts --bundle --log-level=error --minify --platform=node --format=cjs --target=node10.4 --external:@serverless-devs/core --external:@alicloud/openapi-client --outfile=dist/index.js"
   },
