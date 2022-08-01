@@ -2,7 +2,15 @@ import logger from './common/logger';
 import {InputProps} from './common/entity';
 import {CDNConfig} from './lib/interface/cdn/CDNConfig';
 import {CDNClient} from './utils/client';
-import {askForAddFun, askForStartCdnDomain, handlerPreMethod, helpAddCname, isChanging, wait} from './utils/util';
+import {
+    askForAddFun,
+    askForStartCdnDomain,
+    handlerPreMethod,
+    hasAddCname,
+    helpAddCname,
+    isChanging,
+    wait
+} from './utils/util';
 import {CatchableError, help, lodash as _} from "@serverless-devs/core";
 import {HELP_INFO} from "./common/contants";
 
@@ -52,13 +60,15 @@ export default class CdnComponent {
             } while (_.isEmpty(cdnDomain.cname));
         }
 
-        if (config.refreshAfterDeploy) {
-            await client.refreshObjectCaches(config.refreshConfig);
-        }
-
         // 校验cname是否已添加
         const cname = cdnDomain.cname;
         await helpAddCname(cname, domainName);
+
+        if (await hasAddCname(cname, domainName)) {
+            if (config.refreshAfterDeploy) {
+                await client.refreshObjectCaches(config.refreshConfig);
+            }
+        }
     }
 
     /**

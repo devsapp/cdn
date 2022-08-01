@@ -49,4 +49,4 @@ export const AUTO_OPEN = 'autoOpen';
 export const AUTO_CREATE = 'autoCreate';
 export const AUTO_START = 'autoStart';
 
-export const DEFAULT_MAX_WAIT_MS = 60000;
+export const DEFAULT_MAX_WAIT_MS = 420000;

@@ -9,7 +9,7 @@ Tags: #标签详情
   - CDN
 Category: 基础云服务
 Service:
-  服务名:
+  CDN:
     Authorities: #权限描述
       - AliyunCDNFullAccess
 Commands: # 指令，格式为指令：指令描述，例如：
@@ -177,7 +177,7 @@ Properties:
     default: true
   maxWaitMs:
     title: 最长等待毫秒数
-    description: 与waitUntilFinised参数配合使用,超过最长等待时间不再等待，直接执行下一步，默认最长等待一分钟
+    description: 与waitUntilFinised参数配合使用,超过最长等待时间不再等待，直接执行下一步，默认最长等待七分钟
     default: 60000
   refreshAfterDeploy:
     title: 部署后自动刷新cdn

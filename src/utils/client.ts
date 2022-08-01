@@ -12,7 +12,7 @@ import logger from '../common/logger';
 import {CatchableError} from '@serverless-devs/core';
 import {RefreshConfig} from "../lib/interface/cdn/RefreshConfig";
 import {PushObjectCacheConfig} from "../lib/interface/cdn/PushObjectCacheConfig";
-import {askForOpenCdnService, retry, SPINNER_VM} from "./util";
+import {askForOpenCdnService, retry, SPINNER_VM, wait} from "./util";
 import {DEFAULT_MAX_WAIT_MS} from "../common/contants";
 
 export class CDNClient {
@@ -131,13 +131,14 @@ export class CDNClient {
 
         request.sources = JSON.stringify(cdnConfig.sources);
         await this.client.addCdnDomain(request);
-
         if (waitUntilFinished) {
-            const getCdnDomainFn = this.getCdnDomain;
-            await retry(DEFAULT_MAX_WAIT_MS, async () => {
-                const r = await getCdnDomainFn(domainName);
-                return r.domainStatus.includes('ing') ? null : r;
-            })
+            let counter = 0;
+            let res = null;
+            do {
+                await wait(10000);
+                counter += 10000;
+                res = (await this.getCdnDomain(domainName)).domainStatus.includes('ing')
+            } while (res && counter <= DEFAULT_MAX_WAIT_MS);
         }
         SPINNER_VM.info(`create cdnDomain<${domainName}> success!`)
         SPINNER_VM.stop();

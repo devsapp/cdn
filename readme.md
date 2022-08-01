@@ -88,7 +88,7 @@ services:
 | refreshConfig | Object | 进行refresh操作时必填<br />| 刷新节点的文件内容配置 |
 | pushObjectCacheConfig| Object | 进行warmUp操作时必填| 预热源站内容配置<br /> |
 | waitUntilFinished | Boolean | 否 | 是否等待完全执行再进行下一步，默认为true |
-| maxWaitMs | number | 否 | 最长等待毫秒数，与waitUntilFinised参数配合使用,超过最长等待时间不再等待，直接执行下一步，默认最长等待一分钟 |
+| maxWaitMs | number | 否 | 最长等待毫秒数，与waitUntilFinised参数配合使用,超过最长等待时间不再等待，直接执行下一步，默认最长等待七分钟 |
 | refreshAfterDeploy | Boolean | 否 | 部署后自动刷新cdn，默认为true |
 | autoOpen | Boolean | 否 | cdn服务未开通时自动开通，默认为true |
 | autoCreate | Boolean | 否 | start时，加速域名不存在自动创建，默认为true |
