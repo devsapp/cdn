@@ -270,11 +270,11 @@ export function sourcesValidate(sources: Array<SourceConfig>): Array<string> {
 
         const content = i.content;
         const indexOf = content.indexOf("//");
-        if (indexOf == content.length -1) {
+        if (indexOf + 1 == content.length -1) {
             errmsgs.push(`sources's NO.${index} item verify fail，sources's content is required!`);
 
         }
-        i.content = content.substring(indexOf + 1);
+        i.content = content.substring(indexOf + 2);
 
         const sourcePort = i.port;
         if (sourcePort && !(typeof sourcePort == 'number')) {
