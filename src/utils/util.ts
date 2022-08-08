@@ -268,9 +268,13 @@ export function sourcesValidate(sources: Array<SourceConfig>): Array<string> {
             errmsgs.push(`sources's NO.${index} item verify fail，Pleas fill in sources's type with ${SOURCE_TYPES.join("|")}`);
         }
 
-        if (!i.content) {
+        const content = i.content;
+        const indexOf = content.indexOf("//");
+        if (indexOf == content.length -1) {
             errmsgs.push(`sources's NO.${index} item verify fail，sources's content is required!`);
+
         }
+        i.content = content.substring(indexOf + 1);
 
         const sourcePort = i.port;
         if (sourcePort && !(typeof sourcePort == 'number')) {
