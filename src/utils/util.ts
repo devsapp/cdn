@@ -38,7 +38,6 @@ export async function hasAddCname(cname: string, domainName: string): Promise<bo
     let cnames = [];
     try {
         cnames = await promises.resolve(domainName, 'CNAME');
-        logger.info(cnames);
     } catch (error) {
         // 如果code为ENODATA表示该域名下没有映射cname
         if (error.code != 'ENOTFOUND') {
