@@ -7,6 +7,25 @@
 ## deploy
 修改或者添加加速域名的配置，参考文档 [Add](https://help.aliyun.com/document_detail/91176.htm?spm=a2c4g.11186623.0.0.280d5d7angr9C6#t65090.html)、[Update](https://help.aliyun.com/document_detail/91195.htm?spm=a2c4g.11186623.0.0.280d5d7angr9C6#t65096.html)、[Get](https://help.aliyun.com/document_detail/91187.htm?spm=a2c4g.11186623.0.0.280d5d7angr9C6#doc-api-Cdn-DescribeCdnDomainDetail)。<br />![](https://cdn.nlark.com/yuque/0/2022/jpeg/2754189/1659256792556-19b08e56-1079-4a8e-9fd3-04fe943188e6.jpeg)
 <a name="QZNcK"></a>
+输出如下：
+```yaml
+cdn-service: 
+  cdnType:       web
+  domainName:    cdn.xxx.xyz
+  status:        online
+  cname:         cdn.fitzdev.xyz.w.kunlunaq.com
+  sources: 
+    - 
+      content:  xxx-vue3.vue-service.xxx.cn-shenzhen.fc.devsapp.net
+      port:     80
+      priority: 20
+      type:     fc_domain
+      weight:   10
+  refreshConfig: 
+    objectPaths: 
+      - http://cdn.xxx.xyz/
+    objectType:  Directory
+```
 ## start
 启动加速域名<br />![](https://cdn.nlark.com/yuque/0/2022/jpeg/2754189/1658117898191-81ae6036-80eb-4081-abcc-3c40ec04ce41.jpeg)
 <a name="X1pdD"></a>
@@ -33,6 +52,21 @@
 <a name="BFSJ8"></a>
 ## remove
 删除加速域名。
+输出如下：
+```yaml
+cdn-service: 
+  cdnType:       web
+  domainName:    cdn.xxx.xyz
+  status:        online
+  cname:         cdn.fitzdev.xyz.w.kunlunaq.com
+  sources: 
+    - 
+      content:  xxx-vue3.vue-service.xxx.cn-shenzhen.fc.devsapp.net
+      port:     80
+      priority: 20
+      type:     fc_domain
+      weight:   10
+```
 <a name="oeHnI"></a>
 # YAML规范
 <a name="ubSqx"></a>

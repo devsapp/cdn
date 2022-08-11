@@ -13,6 +13,7 @@ import {
 } from './utils/util';
 import {CatchableError, help, lodash as _} from "@serverless-devs/core";
 import {HELP_INFO} from "./common/contants";
+import {Output} from "./lib/interface/cdn/Output";
 
 export default class CdnComponent {
 
@@ -21,7 +22,7 @@ export default class CdnComponent {
      * @param inputs
      * @returns
      */
-    async deploy(inputs: InputProps<CDNConfig>) {
+    async deploy(inputs: InputProps<CDNConfig>) : Promise<Output> {
         await handlerPreMethod(inputs);
 
         const client = await CDNClient.getInstant(inputs);
@@ -69,6 +70,18 @@ export default class CdnComponent {
                 await client.refreshObjectCaches(config.refreshConfig);
             }
         }
+        return {
+            cdnType: cdnDomain.cdnType,
+            domainName: cdnDomain.domainName,
+            status: cdnDomain.domainStatus,
+            cname: cname,
+            sources: cdnDomain.sources.source,
+            checkUrl: config.checkUrl,
+            scope: config.scope,
+            topLevelDomain: cdnDomain.topLevelDomain,
+            refreshConfig: config.refreshConfig,
+            pushObjectCacheConfig: config.pushObjectCacheConfig
+        };
     }
 
     /**
@@ -153,12 +166,13 @@ export default class CdnComponent {
      * 删除加速域名
      * @param inputs
      */
-    async remove(inputs: InputProps<CDNConfig>) {
+    async remove(inputs: InputProps<CDNConfig>): Promise<Output> {
         await handlerPreMethod(inputs);
+        const config = inputs.props;
 
         const instant = await CDNClient.getInstant(inputs);
 
-        const domainName = inputs.props.domainName;
+        const domainName = config.domainName;
         const cdnDomain = await instant.getCdnDomain(domainName);
 
         if (_.isEmpty(cdnDomain)) {
@@ -170,7 +184,17 @@ export default class CdnComponent {
             throw new CatchableError('Please try it later!', 'The cdnDomain is changing!');
         }
 
-        await instant.deleteCdnDomain(inputs.props.domainName);
+        await instant.deleteCdnDomain(config.domainName);
+
+        return {
+            cdnType: config.cdnType,
+            domainName: config.domainName,
+            cname: cdnDomain.cname,
+            sources: config.sources,
+            checkUrl: config.checkUrl,
+            scope: config.scope,
+            topLevelDomain: config.topLevelDomain,
+        };
     }
 
     /**
