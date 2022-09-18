@@ -267,14 +267,19 @@ export function sourcesValidate(sources: Array<SourceConfig>): Array<string> {
             errmsgs.push(`sources's NO.${index} item verify fail，Pleas fill in sources's type with ${SOURCE_TYPES.join("|")}`);
         }
 
-        const content = i.content;
-        const indexOf = content.indexOf("//");
-        if (indexOf + 1 == content.length -1) {
+        let content = i.content;
+        if (_.isEmpty(content)) {
             errmsgs.push(`sources's NO.${index} item verify fail，sources's content is required!`);
-
         }
-        i.content = content.substring(indexOf + 2);
-
+        const indexOf = content.indexOf("//");
+        // 去掉协议
+        if (indexOf != -1) {
+            console.log(111)
+            i.content = content = content.substring(indexOf + 2);
+            if (_.isEmpty(content)) {
+                errmsgs.push(`sources's NO.${index} item verify fail，sources's content is required!`);
+            }
+        }
         const sourcePort = i.port;
         if (sourcePort && !(typeof sourcePort == 'number')) {
             errmsgs.push(`sources's NO.${index} item verify fail，sources's port expected is number!`);
