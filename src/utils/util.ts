@@ -38,7 +38,6 @@ export async function hasAddCname(cname: string, domainName: string): Promise<bo
     let cnames = [];
     try {
         cnames = await promises.resolve(domainName, 'CNAME');
-        logger.info(cnames);
     } catch (error) {
         // 如果code为ENODATA表示该域名下没有映射cname
         if (error.code != 'ENOTFOUND') {
@@ -268,10 +267,19 @@ export function sourcesValidate(sources: Array<SourceConfig>): Array<string> {
             errmsgs.push(`sources's NO.${index} item verify fail，Pleas fill in sources's type with ${SOURCE_TYPES.join("|")}`);
         }
 
-        if (!i.content) {
+        let content = i.content;
+        if (_.isEmpty(content)) {
             errmsgs.push(`sources's NO.${index} item verify fail，sources's content is required!`);
         }
-
+        const indexOf = content.indexOf("//");
+        // 去掉协议
+        if (indexOf != -1) {
+            console.log(111)
+            i.content = content = content.substring(indexOf + 2);
+            if (_.isEmpty(content)) {
+                errmsgs.push(`sources's NO.${index} item verify fail，sources's content is required!`);
+            }
+        }
         const sourcePort = i.port;
         if (sourcePort && !(typeof sourcePort == 'number')) {
             errmsgs.push(`sources's NO.${index} item verify fail，sources's port expected is number!`);
