@@ -2,6 +2,7 @@ import {promises} from "dns"
 import logger from "../common/logger"
 import {InputProps} from "../common/entity";
 import * as core from "@serverless-devs/core";
+import https from 'https';
 import {CatchableError, commandParse, getCredential, inquirer, spinner} from "@serverless-devs/core";
 import os from "os";
 import path from "path";
@@ -323,9 +324,13 @@ export async function updateCore() {
             const homePath = _.isFunction(core.getRootHome) ? core.getRootHome() : os.homedir();
             const corePath = path.join(homePath, 'cache', 'core');
             const lockPath = path.resolve(corePath, '.s.lock');
-            const result = await core.request(
-                'https://registry.devsapp.cn/simple/devsapp/core/releases/latest',
-            );
+            const result: any = await new Promise((resolve, reject) => {
+                https.get('https://registry.devsapp.cn/simple/devsapp/core/releases/latest', (response) => {
+                    let data = '';
+                    response.on('data', (chunk) => data += chunk);
+                    response.on('end', () => resolve(JSON.parse(data).Response));
+                }).on('error', (err) => reject(err));
+            });
             const version = result.tag_name;
             const url = `https://registry.devsapp.cn/simple/devsapp/core/zipball/${version}`;
             const filename = `core@${version}.zip`;
